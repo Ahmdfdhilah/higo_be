@@ -124,18 +124,31 @@ export class CSVImportService {
 
               // Process batch when full
               if (batch.length >= batchSize) {
-                await this.processBatch(batch, importId, processedBatches++);
-                batch = []; // Clear batch
-                
-                // Force garbage collection for memory management
-                if (global.gc && processedBatches % 10 === 0) {
-                  global.gc();
+                try {
+                  await this.processBatch(batch, importId, processedBatches);
+                  processedBatches++;
+                  batch = []; // Clear batch only after successful processing
+                  
+                  // Force garbage collection for memory management
+                  if (global.gc && processedBatches % 10 === 0) {
+                    global.gc();
+                  }
+                } catch (error) {
+                  console.error(`Batch ${processedBatches} processing failed:`, error);
+                  progress.failed += batch.length;
+                  progress.errors.push({
+                    row: -1,
+                    error: `Batch ${processedBatches} failed: ${(error as any)?.message || 'Unknown error'}`
+                  });
+                  batch = []; // Clear failed batch
+                  processedBatches++;
                 }
               }
 
               // Update progress
               progress.totalProcessed = rowNumber;
-              progress.percentage = Math.min((rowNumber / 1000000) * 100, 100); // Estimate for 1M
+              // Better percentage calculation - we'll estimate total based on file size or use a reasonable cap
+              progress.percentage = Math.min((rowNumber / 100000) * 100, 99); // Cap at 99% until completion
               
               // Stop if too many errors
               if (progress.errors.length > this.MAX_ERRORS) {
@@ -151,23 +164,42 @@ export class CSVImportService {
 
       stream.on('end', async () => {
         try {
-          // Process remaining batch
+          console.log(`CSV stream ended. Remaining batch size: ${batch.length}`);
+          
+          // Process remaining batch (final partial batch)
           if (batch.length > 0) {
-            await this.processBatch(batch, importId, processedBatches++);
+            console.log(`Processing final batch of ${batch.length} records...`);
+            try {
+              await this.processBatch(batch, importId, processedBatches);
+              processedBatches++;
+              console.log(`Final batch processed successfully`);
+            } catch (error) {
+              console.error(`Final batch processing failed:`, error);
+              progress.failed += batch.length;
+              progress.errors.push({
+                row: -1,
+                error: `Final batch failed: ${(error as any)?.message || 'Unknown error'}`
+              });
+            }
           }
 
           // Finalize import
           progress.status = 'completed';
           progress.percentage = 100;
+          progress.currentBatch = processedBatches;
+          progress.totalBatches = processedBatches;
           
           const endTime = new Date();
           const duration = endTime.getTime() - progress.startTime.getTime();
           
           console.log(`CSV Import ${importId} completed in ${duration}ms`);
-          console.log(`Processed: ${progress.totalProcessed}, Success: ${progress.successful}, Failed: ${progress.failed}`);
+          console.log(`Total batches processed: ${processedBatches}`);
+          console.log(`Final stats - Processed: ${progress.totalProcessed}, Success: ${progress.successful}, Failed: ${progress.failed}`);
           
           resolve();
         } catch (error) {
+          console.error('Error in stream end handler:', error);
+          progress.status = 'failed';
           reject(error);
         }
       });
@@ -181,7 +213,9 @@ export class CSVImportService {
   // Process batch with bulk MongoDB operations
   private async processBatch(batch: ICustomer[], importId: string, batchNumber: number): Promise<void> {
     const progress = this.activeImports.get(importId)!;
-    progress.currentBatch = batchNumber;
+    progress.currentBatch = batchNumber + 1; // Human-readable batch number (1-indexed)
+
+    console.log(`Processing batch ${batchNumber + 1} with ${batch.length} records...`);
 
     try {
       // Use MongoDB bulk operations for performance
@@ -197,20 +231,29 @@ export class CSVImportService {
 
       const result = await this.customerRepository.bulkWrite(bulkOps);
       
-      progress.successful += result.insertedCount || 0;
-      progress.failed += (batch.length - (result.insertedCount || 0));
+      const insertedCount = result.insertedCount || 0;
+      const failedCount = batch.length - insertedCount;
       
-      console.log(`Batch ${batchNumber}: Inserted ${result.insertedCount}/${batch.length} records`);
+      progress.successful += insertedCount;
+      progress.failed += failedCount;
+      
+      console.log(`Batch ${batchNumber + 1} completed: ${insertedCount}/${batch.length} inserted successfully`);
+      
+      if (failedCount > 0) {
+        console.warn(`Batch ${batchNumber + 1}: ${failedCount} records failed to insert`);
+      }
       
     } catch (error) {
       // Handle batch errors
+      console.error(`Batch ${batchNumber + 1} failed completely:`, error);
       progress.failed += batch.length;
       progress.errors.push({
         row: -1,
-        error: `Batch ${batchNumber} failed: ${(error as any)?.message || 'Unknown error'}`
+        error: `Batch ${batchNumber + 1} failed: ${(error as any)?.message || 'Unknown error'}`
       });
       
-      console.error(`Batch ${batchNumber} failed:`, error);
+      // Re-throw to be handled by caller
+      throw error;
     }
   }
 
@@ -386,5 +429,25 @@ export class CSVImportService {
       result[importId] = progress;
     });
     return result;
+  }
+
+  // Get import statistics for debugging
+  getImportStats(importId: string): any {
+    const progress = this.activeImports.get(importId);
+    if (!progress) return null;
+
+    return {
+      importId,
+      totalProcessed: progress.totalProcessed,
+      successful: progress.successful,
+      failed: progress.failed,
+      currentBatch: progress.currentBatch,
+      totalBatches: progress.totalBatches,
+      percentage: progress.percentage,
+      status: progress.status,
+      errorCount: progress.errors.length,
+      startTime: progress.startTime,
+      estimatedTimeRemaining: progress.estimatedTimeRemaining
+    };
   }
 }
