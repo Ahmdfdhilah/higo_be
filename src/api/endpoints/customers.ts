@@ -42,9 +42,10 @@ const upload = multer({
     }
   },
   limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB limit
+    fileSize: 200 * 1024 * 1024, // 200MB limit
+    files: 1 // Only allow 1 file at a time
   }
-});
+}).single('csvFile');
 
 // Get all customers with filtering and pagination
 router.get('/',
@@ -215,7 +216,41 @@ router.delete('/:id',
 
 // Import customers from CSV file
 router.post('/import/csv',
-  upload.single('csvFile'),
+  (req: any, res: Response, next: any): void => {
+    // Increase timeout for large file uploads (10 minutes)
+    req.setTimeout(600000);
+    res.setTimeout(600000);
+    next();
+  },
+  (req: any, res: Response, next: any): void => {
+    upload(req, res, (err: any) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          res.status(400).json({
+            success: false,
+            message: 'File size too large. Maximum allowed size is 200MB.',
+            data: null
+          });
+          return;
+        }
+        if (err.message === 'Only CSV files are allowed!') {
+          res.status(400).json({
+            success: false,
+            message: 'Invalid file type. Only CSV files are allowed.',
+            data: null
+          });
+          return;
+        }
+        res.status(400).json({
+          success: false,
+          message: `Upload error: ${err.message}`,
+          data: null
+        });
+        return;
+      }
+      next();
+    });
+  },
   async (req: any, res: Response): Promise<void> => {
     try {
       if (!req.file) {
@@ -233,6 +268,8 @@ router.post('/import/csv',
         batchSize: parseInt(req.body.batchSize) || 1000
       };
 
+      console.log(`Processing CSV file: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)}MB)`);
+      
       const { importId, progress } = await csvImportService.importFromCSV(req.file.path, options);
       
       // Delete the uploaded file after processing starts
@@ -249,7 +286,12 @@ router.post('/import/csv',
         data: {
           importId,
           progress,
-          statusUrl: `/api/customers/import/status/${importId}`
+          statusUrl: `/api/customers/import/status/${importId}`,
+          fileInfo: {
+            originalName: req.file.originalname,
+            size: req.file.size,
+            sizeFormatted: `${(req.file.size / 1024 / 1024).toFixed(2)}MB`
+          }
         }
       });
     } catch (error: any) {

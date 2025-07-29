@@ -45,8 +45,8 @@ class App {
     this.app.use(requestLogger);
 
     this.app.use(cookieParser()); // Enable cookie parsing
-    this.app.use(express.json({ limit: '10mb' }));
-    this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+    this.app.use(express.json({ limit: '250mb' })); // Increase for large CSV uploads
+    this.app.use(express.urlencoded({ extended: true, limit: '250mb' }));
 
     this.app.use(generalLimiter);
   }
