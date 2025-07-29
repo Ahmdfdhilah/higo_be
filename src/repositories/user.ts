@@ -1,7 +1,7 @@
 import { BaseRepository } from './base';
 import { IUser, User } from '../models/user';
 import { UserStatus, UserRole } from '../models/enums';
-import { PaginationParams, PaginatedResponse } from '../schemas/base';
+import { PaginationParams, PaginatedResponse } from '../types/base';
 
 export class UserRepository extends BaseRepository<IUser> {
   constructor() {

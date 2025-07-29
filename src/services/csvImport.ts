@@ -5,7 +5,7 @@ import { CustomerService } from './customer';
 import { CustomerRepository } from '../repositories/customer';
 import { ICustomer } from '../models/customer';
 import { Gender, DeviceBrand, DigitalInterest, LocationType } from '../models/enums';
-import { ApiResponse } from '../schemas/base';
+import { ApiResponse } from '../types/base';
 
 export interface CSVImportProgress {
   totalProcessed: number;

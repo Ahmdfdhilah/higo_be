@@ -8,7 +8,7 @@ import { redisClient } from './core/redis';
 import { globalErrorHandler, notFound } from './middleware/error_handler';
 import { requestLogger, addCorrelationId } from './middleware/logging';
 import { generalLimiter } from './middleware/rate_limiting';
-import { ApiResponse, StatusResponse } from './schemas/base';
+import { ApiResponse, StatusResponse } from './types/base';
 import apiRouter from './api/router';
 
 class App {

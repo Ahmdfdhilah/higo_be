@@ -9,8 +9,7 @@ import {
   UpdateUserDto,
   BulkUserActionDto,
   ChangeUserRoleDto,
-  UserQueryDto
-} from '../../schemas/user';
+} from '../../types/user';
 import { paginationValidation } from '../../validations/base';
 import { bulkUserActionValidation, changeUserRoleValidation, createUserValidation, inactiveUsersValidation, roleParamWithPaginationValidation, updateUserByIdValidation, userActionValidation, userByIdValidation } from '../../validations/user';
 

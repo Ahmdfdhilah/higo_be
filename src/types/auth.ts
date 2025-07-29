@@ -1,7 +1,7 @@
 import { UserRole } from '../models/enums';
 import { UserResponseDto } from './user';
 
-// Auth DTOs
+// Authentication request DTOs
 export interface LoginDto {
   email: string;
   password: string;
@@ -19,6 +19,7 @@ export interface RefreshTokenDto {
   refreshToken: string;
 }
 
+// Authentication response DTOs
 export interface AuthResponseDto {
   user: UserResponseDto;
   accessToken: string;
@@ -42,7 +43,7 @@ export interface VerifyTokenResponseDto {
   role: UserRole;
 }
 
-// Profile update DTOs (for authenticated user)
+// Profile management DTOs
 export interface UpdateProfileDto {
   firstName?: string;
   lastName?: string;

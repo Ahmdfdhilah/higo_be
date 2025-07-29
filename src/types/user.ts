@@ -1,7 +1,20 @@
 import { Types } from 'mongoose';
+import { IBaseModel, BaseFilters } from './base';
 import { UserRole, UserStatus } from '../models/enums';
 
-// User DTOs for input
+// Core User Interface (extends database model)
+export interface IUser extends IBaseModel {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  status: UserStatus;
+  lastLoginAt?: Date;
+  emailVerifiedAt?: Date;
+}
+
+// DTOs for API requests
 export interface CreateUserDto {
   email: string;
   password: string;
@@ -21,7 +34,11 @@ export interface ChangePasswordDto {
   newPassword: string;
 }
 
-// User DTO for response - matches IUser model structure
+export interface ChangeUserRoleDto {
+  role: UserRole;
+}
+
+// DTOs for API responses
 export interface UserResponseDto {
   _id: Types.ObjectId | string;
   email: string;
@@ -37,6 +54,15 @@ export interface UserResponseDto {
   updatedBy?: Types.ObjectId | string | undefined;
 }
 
+// Query filters
+export interface UserFilters extends BaseFilters {
+  role?: UserRole;
+  status?: UserStatus;
+  sortBy?: 'createdAt' | 'updatedAt' | 'lastLoginAt' | 'email' | 'firstName' | 'lastName';
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Statistics
 export interface UserStatsDto {
   total: number;
   active: number;
@@ -51,23 +77,9 @@ export interface UserStatsDto {
   };
 }
 
+// Bulk operations
 export interface BulkUserActionDto {
   userIds: string[];
-}
-
-export interface ChangeUserRoleDto {
-  role: UserRole;
-}
-
-// User Query DTOs
-export interface UserQueryDto {
-  page?: number;
-  size?: number;
-  search?: string;
-  role?: UserRole;
-  status?: UserStatus;
-  sortBy?: 'createdAt' | 'updatedAt' | 'lastLoginAt' | 'email' | 'firstName' | 'lastName';
-  sortOrder?: 'asc' | 'desc';
 }
 
 export interface InactiveUsersQueryDto {

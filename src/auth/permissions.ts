@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserRole } from '../models/enums';
 import { AuthRequest } from './jwt';
-import { ApiResponse } from '../schemas/base';
+import { ApiResponse } from '../types/base';
 
 export enum Permission {
   USER_READ = 'user:read',

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ApiResponse } from '../schemas/base';
+import { ApiResponse } from '../types/base';
 import { config, isDevelopment } from '../core/config';
 
 export class AppError extends Error {

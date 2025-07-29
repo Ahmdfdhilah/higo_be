@@ -1,7 +1,7 @@
 import { BaseRepository } from './base';
 import { ICustomer, Customer } from '../models/customer';
 import { Gender, DeviceBrand, LocationType } from '../models/enums';
-import { PaginationParams, PaginatedResponse } from '../schemas/base';
+import { PaginationParams, PaginatedResponse } from '../types/base';
 
 export class CustomerRepository extends BaseRepository<ICustomer> {
   constructor() {

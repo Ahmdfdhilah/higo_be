@@ -15,7 +15,7 @@ import {
 import {
   CreateCustomerDto,
   UpdateCustomerDto
-} from '../../schemas/customer';
+} from '../../types/customer';
 
 const router = Router();
 const customerService = new CustomerService();

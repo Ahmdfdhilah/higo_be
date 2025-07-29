@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { config } from '../core/config';
 import { redisClient } from '../core/redis';
 import { User, IUser } from '../models/user';
-import { ApiResponse } from '../schemas/base';
-import { TokenResponseDto } from '../schemas/auth';
+import { ApiResponse } from '../types/base';
+import { TokenResponseDto } from '../types/auth';
 
 export interface JwtPayload {
   userId: string;

@@ -3,7 +3,7 @@ import { RedisStore } from 'rate-limit-redis';
 import { Request } from 'express';
 import { redisClient } from '../core/redis';
 import { config } from '../core/config';
-import { ApiResponse } from '../schemas/base';
+import { ApiResponse } from '../types/base';
 
 // Custom IP key generator that handles IPv6 addresses properly
 const generateKeyByIp = (req: Request): string => {

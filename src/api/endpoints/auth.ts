@@ -6,8 +6,8 @@ import {
   RegisterDto, 
   LoginDto, 
   UpdateProfileDto 
-} from '../../schemas/auth';
-import { ChangePasswordDto } from '../../schemas/user';
+} from '../../types/auth';
+import { ChangePasswordDto } from '../../types/user';
 import { changePasswordValidation, loginValidation, registerValidation, updateProfileValidation } from '../../validations/auth';
 
 const router = Router();

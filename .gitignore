@@ -1,34 +1,49 @@
-CLAUDE.MD
-./CLAUDE.MD
-# Logs
-logs
-*.log
+# Dependencies
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-# dist-ssr
-*.local
+# Compiled output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+
+# Uploads
+uploads/csv/*.csv
+uploads/images/*
+!uploads/csv/.gitkeep
+!uploads/images/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
+# Development files
+*.local
 .vercel
-dist
-./claude
+
+# Claude files
+CLAUDE.MD
 claude
-*claude
-/dist
-.env

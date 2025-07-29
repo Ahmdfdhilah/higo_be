@@ -3,7 +3,7 @@ import { BaseService } from './base';
 import { UserRepository } from '../repositories/user';
 import { IUser, User } from '../models/user';
 import { UserStatus, UserRole } from '../models/enums';
-import { ApiResponse, PaginationParams, PaginatedResponse } from '../schemas/base';
+import { ApiResponse, PaginationParams, PaginatedResponse } from '../types/base';
 import { JWTService } from '../auth/jwt';
 import { 
   CreateUserDto, 
@@ -11,12 +11,12 @@ import {
   ChangePasswordDto, 
   UserResponseDto, 
   UserStatsDto,
-} from '../schemas/user';
+} from '../types/user';
 import { 
   LoginDto, 
   AuthResponseDto, 
   TokenResponseDto 
-} from '../schemas/auth';
+} from '../types/auth';
 
 export class UserService extends BaseService<IUser> {
   private jwtService: JWTService;
