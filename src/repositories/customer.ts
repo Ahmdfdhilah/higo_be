@@ -191,11 +191,16 @@ export class CustomerRepository extends BaseRepository<ICustomer> {
   // Bulk operations for CSV import performance
   async bulkWrite(operations: any[]): Promise<any> {
     try {
+      if (!operations || operations.length === 0) {
+        return { insertedCount: 0, matchedCount: 0, modifiedCount: 0, deletedCount: 0, upsertedCount: 0 };
+      }
+      
       return await this.model.bulkWrite(operations, { 
         ordered: false, // Continue on individual errors
         writeConcern: { w: 1, j: false } // Optimize for speed
       });
     } catch (error) {
+      console.error('BulkWrite operation failed:', error);
       throw this.handleError(error, 'bulkWrite');
     }
   }

@@ -213,11 +213,20 @@ export abstract class BaseRepository<T extends Document> {
     }
     
     if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern)[0];
+      // Safe handling of duplicate key error
+      let field = 'unknown';
+      if (error.keyPattern && typeof error.keyPattern === 'object') {
+        const keys = Object.keys(error.keyPattern);
+        if (keys.length > 0 && keys[0]) {
+          field = keys[0];
+        }
+      }
       return new Error(`Duplicate value for field: ${field}`);
     }
     
-    return new Error(`Database operation failed: ${error.message}`);
+    // Safe handling of error message
+    const message = error?.message || 'Unknown database error';
+    return new Error(`Database operation failed: ${message}`);
   }
 
   async startTransaction(): Promise<any> {

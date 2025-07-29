@@ -218,20 +218,39 @@ export class CSVImportService {
     console.log(`Processing batch ${batchNumber + 1} with ${batch.length} records...`);
 
     try {
+      // Validate batch input
+      if (!batch || batch.length === 0) {
+        console.warn(`Batch ${batchNumber + 1}: Empty batch, skipping...`);
+        return;
+      }
+
       // Use MongoDB bulk operations for performance
-      const bulkOps = batch.map(data => ({
-        insertOne: {
-          document: {
-            ...data,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
+      const bulkOps = batch.map((data, index) => {
+        if (!data) {
+          console.warn(`Batch ${batchNumber + 1}: Null data at index ${index}, skipping...`);
+          return null;
         }
-      }));
+        
+        return {
+          insertOne: {
+            document: {
+              ...data,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          }
+        };
+      }).filter(op => op !== null); // Remove null operations
+
+      if (bulkOps.length === 0) {
+        console.warn(`Batch ${batchNumber + 1}: No valid operations after filtering`);
+        progress.failed += batch.length;
+        return;
+      }
 
       const result = await this.customerRepository.bulkWrite(bulkOps);
       
-      const insertedCount = result.insertedCount || 0;
+      const insertedCount = result?.insertedCount || 0;
       const failedCount = batch.length - insertedCount;
       
       progress.successful += insertedCount;
@@ -246,11 +265,18 @@ export class CSVImportService {
     } catch (error) {
       // Handle batch errors
       console.error(`Batch ${batchNumber + 1} failed completely:`, error);
+      
+      // Add detailed error information
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+      
       progress.failed += batch.length;
       progress.errors.push({
         row: -1,
-        error: `Batch ${batchNumber + 1} failed: ${(error as any)?.message || 'Unknown error'}`
+        error: `Batch ${batchNumber + 1} failed: ${errorMessage}`
       });
+      
+      console.error(`Error details:`, { errorMessage, errorStack });
       
       // Re-throw to be handled by caller
       throw error;
