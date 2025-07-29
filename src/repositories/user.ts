@@ -1,4 +1,3 @@
-import { FilterQuery } from 'mongoose';
 import { BaseRepository } from './base';
 import { IUser, User } from '../models/user';
 import { UserStatus, UserRole } from '../models/enums';

@@ -3,7 +3,6 @@ import { UserService } from '../../services/user';
 import { authMiddleware } from '../../auth/jwt';
 import { checkPermission } from '../../auth/permissions';
 import { validateRequest } from '../../middleware/validation';
-import { body, query, param } from 'express-validator';
 import { UserRole, UserStatus } from '../../models/enums';
 import {
   CreateUserDto,
@@ -12,38 +11,12 @@ import {
   ChangeUserRoleDto,
   UserQueryDto
 } from '../../schemas/user';
+import { paginationValidation } from '@/validations/base';
+import { bulkUserActionValidation, changeUserRoleValidation, createUserValidation, inactiveUsersValidation, roleParamWithPaginationValidation, updateUserByIdValidation, userActionValidation, userByIdValidation } from '@/validations/user';
 
 const router = Router();
 const userService = new UserService();
 
-// Validation schemas
-const createUserValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-  body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain uppercase, lowercase, number and special character'),
-  body('firstName').trim().isLength({ min: 1 }).withMessage('First name is required'),
-  body('lastName').trim().isLength({ min: 1 }).withMessage('Last name is required'),
-  body('role').optional().isIn(Object.values(UserRole)).withMessage('Invalid role')
-];
-
-const updateUserValidation = [
-  body('firstName').optional().trim().isLength({ min: 1 }).withMessage('First name cannot be empty'),
-  body('lastName').optional().trim().isLength({ min: 1 }).withMessage('Last name cannot be empty'),
-  body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required')
-];
-
-const paginationValidation = [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-  query('size').optional().isInt({ min: 1, max: 100 }).withMessage('Size must be between 1 and 100'),
-  query('search').optional().isString().withMessage('Search must be a string')
-];
-
-const idValidation = [
-  param('id').isMongoId().withMessage('Invalid user ID')
-];
 
 // Get all users (Admin only)
 router.get('/',
@@ -103,10 +76,7 @@ router.get('/active',
 router.get('/role/:role',
   authMiddleware,
   checkPermission(['admin']),
-  [
-    param('role').isIn(Object.values(UserRole)).withMessage('Invalid role'),
-    ...paginationValidation
-  ],
+  roleParamWithPaginationValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -153,9 +123,7 @@ router.get('/stats',
 router.get('/inactive',
   authMiddleware,
   checkPermission(['admin']),
-  [
-    query('days').optional().isInt({ min: 1 }).withMessage('Days must be a positive integer')
-  ],
+  inactiveUsersValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -177,7 +145,7 @@ router.get('/inactive',
 // Get specific user by ID (Admin/Moderator or own profile)
 router.get('/:id',
   authMiddleware,
-  idValidation,
+  userByIdValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -245,7 +213,7 @@ router.post('/',
 // Update user (Admin/Moderator or own profile)
 router.put('/:id',
   authMiddleware,
-  [...idValidation, ...updateUserValidation],
+  updateUserByIdValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -291,7 +259,7 @@ router.put('/:id',
 router.put('/:id/suspend',
   authMiddleware,
   checkPermission(['admin']),
-  idValidation,
+  userActionValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -324,7 +292,7 @@ router.put('/:id/suspend',
 router.put('/:id/activate',
   authMiddleware,
   checkPermission(['admin']),
-  idValidation,
+  userActionValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -357,10 +325,7 @@ router.put('/:id/activate',
 router.put('/:id/role',
   authMiddleware,
   checkPermission(['admin']),
-  [
-    ...idValidation,
-    body('role').isIn(Object.values(UserRole)).withMessage('Invalid role')
-  ],
+  changeUserRoleValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -394,7 +359,7 @@ router.put('/:id/role',
 router.delete('/:id',
   authMiddleware,
   checkPermission(['admin']),
-  idValidation,
+  userActionValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -437,10 +402,7 @@ router.delete('/:id',
 router.post('/bulk/suspend',
   authMiddleware,
   checkPermission(['admin']),
-  [
-    body('userIds').isArray({ min: 1 }).withMessage('User IDs array is required'),
-    body('userIds.*').isMongoId().withMessage('Invalid user ID')
-  ],
+  bulkUserActionValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -468,10 +430,7 @@ router.post('/bulk/suspend',
 router.post('/bulk/activate',
   authMiddleware,
   checkPermission(['admin']),
-  [
-    body('userIds').isArray({ min: 1 }).withMessage('User IDs array is required'),
-    body('userIds.*').isMongoId().withMessage('Invalid user ID')
-  ],
+  bulkUserActionValidation,
   validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {

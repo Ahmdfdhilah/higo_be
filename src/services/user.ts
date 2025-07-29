@@ -11,7 +11,6 @@ import {
   ChangePasswordDto, 
   UserResponseDto, 
   UserStatsDto,
-  UserQueryDto 
 } from '../schemas/user';
 import { 
   LoginDto, 

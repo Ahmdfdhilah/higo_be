@@ -1,44 +1,18 @@
 import { Router, Request, Response } from 'express';
 import { UserService } from '../../services/user';
 import { authMiddleware } from '../../auth/jwt';
-import { validateRequest } from '../../middleware/validation';
-import { body } from 'express-validator';
+import { validateRequest } from '../../middleware/validation';;
 import { 
   RegisterDto, 
   LoginDto, 
   UpdateProfileDto 
 } from '../../schemas/auth';
 import { ChangePasswordDto } from '../../schemas/user';
+import { changePasswordValidation, loginValidation, registerValidation, updateProfileValidation } from '@/validations/auth';
 
 const router = Router();
 const userService = new UserService();
 
-// Validation schemas
-const registerValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-  body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain uppercase, lowercase, number and special character'),
-  body('firstName').trim().isLength({ min: 1 }).withMessage('First name is required'),
-  body('lastName').trim().isLength({ min: 1 }).withMessage('Last name is required'),
-  body('role').optional().isIn(['admin', 'user', 'moderator']).withMessage('Invalid role')
-];
-
-const loginValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
-  body('password').notEmpty().withMessage('Password is required')
-];
-
-const changePasswordValidation = [
-  body('currentPassword').notEmpty().withMessage('Current password is required'),
-  body('newPassword')
-    .isLength({ min: 8 })
-    .withMessage('New password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('New password must contain uppercase, lowercase, number and special character')
-];
 
 // Register endpoint
 router.post('/register', registerValidation, validateRequest, async (req: Request, res: Response) => {
@@ -200,11 +174,7 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
 });
 
 // Update current user profile
-router.put('/me', authMiddleware, [
-  body('firstName').optional().trim().isLength({ min: 1 }).withMessage('First name cannot be empty'),
-  body('lastName').optional().trim().isLength({ min: 1 }).withMessage('Last name cannot be empty'),
-  body('email').optional().isEmail().normalizeEmail().withMessage('Valid email is required')
-], validateRequest, async (req: Request, res: Response) => {
+router.put('/me', authMiddleware, updateProfileValidation, validateRequest, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
     const updateData: UpdateProfileDto = req.body;
