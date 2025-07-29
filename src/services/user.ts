@@ -150,7 +150,7 @@ export class UserService extends BaseService<IUser> {
         }
       };
     } catch (error) {
-      return this.handleError(error, 'login');
+      return this.handleError<AuthResponseDto>(error, 'login');
     }
   }
 
@@ -185,7 +185,7 @@ export class UserService extends BaseService<IUser> {
         }
       };
     } catch (error) {
-      return this.handleError(error, 'refreshToken');
+      return this.handleError<TokenResponseDto>(error, 'refreshToken');
     }
   }
 
@@ -319,7 +319,7 @@ export class UserService extends BaseService<IUser> {
         data
       };
     } catch (error) {
-      return this.handleError(error, 'getUsersByRole');
+      return this.handleError<PaginatedResponse<UserResponseDto> | UserResponseDto[]>(error, 'getUsersByRole');
     }
   }
 
@@ -345,7 +345,7 @@ export class UserService extends BaseService<IUser> {
         data
       };
     } catch (error) {
-      return this.handleError(error, 'getActiveUsers');
+      return this.handleError<PaginatedResponse<UserResponseDto> | UserResponseDto[]>(error, 'getActiveUsers');
     }
   }
 
@@ -417,7 +417,7 @@ export class UserService extends BaseService<IUser> {
         data: stats
       };
     } catch (error) {
-      return this.handleError(error, 'getUserStats');
+      return this.handleError<UserStatsDto>(error, 'getUserStats');
     }
   }
 
@@ -431,7 +431,7 @@ export class UserService extends BaseService<IUser> {
         data: users.map(user => this.toUserResponseDto(user))
       };
     } catch (error) {
-      return this.handleError(error, 'getInactiveUsers');
+      return this.handleError<UserResponseDto[]>(error, 'getInactiveUsers');
     }
   }
 

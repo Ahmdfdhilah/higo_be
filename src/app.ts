@@ -9,6 +9,7 @@ import { globalErrorHandler, notFound } from './middleware/error_handler';
 import { requestLogger, addCorrelationId } from './middleware/logging';
 import { generalLimiter } from './middleware/rate_limiting';
 import { ApiResponse, StatusResponse } from './schemas/base';
+import apiRouter from './api/router';
 
 class App {
   public app: express.Application;
@@ -98,10 +99,18 @@ class App {
         data: {
           version: '1.0.0',
           environment: config.nodeEnv,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          endpoints: {
+            api: '/api',
+            health: config.healthCheckPath,
+            metrics: config.metricsPath
+          }
         }
       } as ApiResponse);
     });
+
+    // Mount API routes
+    this.app.use('/api', apiRouter);
   }
 
   private initializeErrorHandling(): void {

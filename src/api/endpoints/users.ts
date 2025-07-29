@@ -5,12 +5,12 @@ import { checkPermission } from '../../auth/permissions';
 import { validateRequest } from '../../middleware/validation';
 import { body, query, param } from 'express-validator';
 import { UserRole, UserStatus } from '../../models/enums';
-import { 
-  CreateUserDto, 
-  UpdateUserDto, 
-  BulkUserActionDto, 
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  BulkUserActionDto,
   ChangeUserRoleDto,
-  UserQueryDto 
+  UserQueryDto
 } from '../../schemas/user';
 
 const router = Router();
@@ -46,20 +46,20 @@ const idValidation = [
 ];
 
 // Get all users (Admin only)
-router.get('/', 
-  authMiddleware, 
-  checkPermission(['admin']), 
-  paginationValidation, 
-  validateRequest, 
+router.get('/',
+  authMiddleware,
+  checkPermission(['admin']),
+  paginationValidation,
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const size = parseInt(req.query.size as string) || 10;
       const search = req.query.search as string;
-      
+
       const pagination = { page, size, search };
       const result = await userService.findAll({}, pagination);
-      
+
       res.status(200).json(result);
     } catch (error) {
       console.error('Get users error:', error);
@@ -73,20 +73,20 @@ router.get('/',
 );
 
 // Get active users (Admin/Moderator)
-router.get('/active', 
-  authMiddleware, 
-  checkPermission(['admin', 'moderator']), 
-  paginationValidation, 
-  validateRequest, 
+router.get('/active',
+  authMiddleware,
+  checkPermission(['admin', 'moderator']),
+  paginationValidation,
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const page = parseInt(req.query.page as string) || undefined;
       const size = parseInt(req.query.size as string) || undefined;
       const search = req.query.search as string;
-      
+
       const pagination = (page && size) ? { page, size, search } : undefined;
       const result = await userService.getActiveUsers(pagination);
-      
+
       res.status(200).json(result);
     } catch (error) {
       console.error('Get active users error:', error);
@@ -100,24 +100,24 @@ router.get('/active',
 );
 
 // Get users by role (Admin only)
-router.get('/role/:role', 
-  authMiddleware, 
-  checkPermission(['admin']), 
+router.get('/role/:role',
+  authMiddleware,
+  checkPermission(['admin']),
   [
     param('role').isIn(Object.values(UserRole)).withMessage('Invalid role'),
     ...paginationValidation
   ],
-  validateRequest, 
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const role = req.params.role as UserRole;
       const page = parseInt(req.query.page as string) || undefined;
       const size = parseInt(req.query.size as string) || undefined;
       const search = req.query.search as string;
-      
+
       const pagination = (page && size) ? { page, size, search } : undefined;
       const result = await userService.getUsersByRole(role, pagination);
-      
+
       res.status(200).json(result);
     } catch (error) {
       console.error('Get users by role error:', error);
@@ -131,9 +131,9 @@ router.get('/role/:role',
 );
 
 // Get user statistics (Admin only)
-router.get('/stats', 
-  authMiddleware, 
-  checkPermission(['admin']), 
+router.get('/stats',
+  authMiddleware,
+  checkPermission(['admin']),
   async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await userService.getUserStats();
@@ -150,9 +150,9 @@ router.get('/stats',
 );
 
 // Get inactive users (Admin only)
-router.get('/inactive', 
-  authMiddleware, 
-  checkPermission(['admin']), 
+router.get('/inactive',
+  authMiddleware,
+  checkPermission(['admin']),
   [
     query('days').optional().isInt({ min: 1 }).withMessage('Days must be a positive integer')
   ],
@@ -161,7 +161,7 @@ router.get('/inactive',
     try {
       const days = parseInt(req.query.days as string) || 30;
       const result = await userService.getInactiveUsers(days);
-      
+
       res.status(200).json(result);
     } catch (error) {
       console.error('Get inactive users error:', error);
@@ -175,15 +175,15 @@ router.get('/inactive',
 );
 
 // Get specific user by ID (Admin/Moderator or own profile)
-router.get('/:id', 
-  authMiddleware, 
-  idValidation, 
-  validateRequest, 
+router.get('/:id',
+  authMiddleware,
+  idValidation,
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const currentUser = (req as any).user;
-      
+
       if (!userId) {
         res.status(400).json({
           success: false,
@@ -192,11 +192,11 @@ router.get('/:id',
         });
         return;
       }
-      
+
       // Check if user can access this profile
-      if (currentUser.role !== UserRole.ADMIN && 
-          currentUser.role !== UserRole.MODERATOR && 
-          currentUser.id !== userId) {
+      if (currentUser.role !== UserRole.ADMIN &&
+        currentUser.role !== UserRole.MODERATOR &&
+        currentUser.id !== userId) {
         res.status(403).json({
           success: false,
           message: 'Access denied',
@@ -204,8 +204,8 @@ router.get('/:id',
         });
         return;
       }
-      
-      const result = await userService.findById(userId);
+
+      const result = await userService.getUserById(userId);
       res.status(result.success ? 200 : 404).json(result);
     } catch (error) {
       console.error('Get user error:', error);
@@ -219,16 +219,16 @@ router.get('/:id',
 );
 
 // Create new user (Admin only)
-router.post('/', 
-  authMiddleware, 
-  checkPermission(['admin']), 
-  createUserValidation, 
-  validateRequest, 
+router.post('/',
+  authMiddleware,
+  checkPermission(['admin']),
+  createUserValidation,
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const userData: CreateUserDto = req.body;
       const createdBy = (req as any).user.id;
-      
+
       const result = await userService.register(userData, createdBy);
       res.status(result.success ? 201 : 400).json(result);
     } catch (error) {
@@ -243,16 +243,16 @@ router.post('/',
 );
 
 // Update user (Admin/Moderator or own profile)
-router.put('/:id', 
-  authMiddleware, 
-  [...idValidation, ...updateUserValidation], 
-  validateRequest, 
+router.put('/:id',
+  authMiddleware,
+  [...idValidation, ...updateUserValidation],
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const currentUser = (req as any).user;
       const updateData: UpdateUserDto = req.body;
-      
+
       if (!userId) {
         res.status(400).json({
           success: false,
@@ -261,11 +261,11 @@ router.put('/:id',
         });
         return;
       }
-      
+
       // Check permissions
-      if (currentUser.role !== UserRole.ADMIN && 
-          currentUser.role !== UserRole.MODERATOR && 
-          currentUser.id !== userId) {
+      if (currentUser.role !== UserRole.ADMIN &&
+        currentUser.role !== UserRole.MODERATOR &&
+        currentUser.id !== userId) {
         res.status(403).json({
           success: false,
           message: 'Access denied',
@@ -273,7 +273,7 @@ router.put('/:id',
         });
         return;
       }
-      
+
       const result = await userService.updateProfile(userId, updateData);
       res.status(result.success ? 200 : 400).json(result);
     } catch (error) {
@@ -288,16 +288,16 @@ router.put('/:id',
 );
 
 // Suspend user (Admin only)
-router.put('/:id/suspend', 
-  authMiddleware, 
-  checkPermission(['admin']), 
-  idValidation, 
-  validateRequest, 
+router.put('/:id/suspend',
+  authMiddleware,
+  checkPermission(['admin']),
+  idValidation,
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const suspendedBy = (req as any).user.id;
-      
+
       if (!userId) {
         res.status(400).json({
           success: false,
@@ -306,7 +306,7 @@ router.put('/:id/suspend',
         });
         return;
       }
-      
+
       const result = await userService.suspendUser(userId, suspendedBy);
       res.status(result.success ? 200 : 404).json(result);
     } catch (error) {
@@ -321,16 +321,16 @@ router.put('/:id/suspend',
 );
 
 // Activate user (Admin only)
-router.put('/:id/activate', 
-  authMiddleware, 
-  checkPermission(['admin']), 
-  idValidation, 
-  validateRequest, 
+router.put('/:id/activate',
+  authMiddleware,
+  checkPermission(['admin']),
+  idValidation,
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const activatedBy = (req as any).user.id;
-      
+
       if (!userId) {
         res.status(400).json({
           success: false,
@@ -339,7 +339,7 @@ router.put('/:id/activate',
         });
         return;
       }
-      
+
       const result = await userService.activateUser(userId, activatedBy);
       res.status(result.success ? 200 : 404).json(result);
     } catch (error) {
@@ -354,20 +354,20 @@ router.put('/:id/activate',
 );
 
 // Change user role (Admin only)
-router.put('/:id/role', 
-  authMiddleware, 
-  checkPermission(['admin']), 
+router.put('/:id/role',
+  authMiddleware,
+  checkPermission(['admin']),
   [
     ...idValidation,
     body('role').isIn(Object.values(UserRole)).withMessage('Invalid role')
   ],
-  validateRequest, 
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const roleData: ChangeUserRoleDto = req.body;
       const changedBy = (req as any).user.id;
-      
+
       if (!userId) {
         res.status(400).json({
           success: false,
@@ -376,7 +376,7 @@ router.put('/:id/role',
         });
         return;
       }
-      
+
       const result = await userService.changeUserRole(userId, roleData.role, changedBy);
       res.status(result.success ? 200 : 404).json(result);
     } catch (error) {
@@ -391,16 +391,16 @@ router.put('/:id/role',
 );
 
 // Delete user (Admin only)
-router.delete('/:id', 
-  authMiddleware, 
-  checkPermission(['admin']), 
-  idValidation, 
-  validateRequest, 
+router.delete('/:id',
+  authMiddleware,
+  checkPermission(['admin']),
+  idValidation,
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.params.id;
       const currentUserId = (req as any).user.id;
-      
+
       if (!userId) {
         res.status(400).json({
           success: false,
@@ -409,7 +409,7 @@ router.delete('/:id',
         });
         return;
       }
-      
+
       // Prevent admin from deleting themselves
       if (userId === currentUserId) {
         res.status(400).json({
@@ -419,7 +419,7 @@ router.delete('/:id',
         });
         return;
       }
-      
+
       const result = await userService.delete(userId);
       res.status(result.success ? 200 : 404).json(result);
     } catch (error) {
@@ -434,25 +434,25 @@ router.delete('/:id',
 );
 
 // Bulk operations (Admin only)
-router.post('/bulk/suspend', 
-  authMiddleware, 
-  checkPermission(['admin']), 
+router.post('/bulk/suspend',
+  authMiddleware,
+  checkPermission(['admin']),
   [
     body('userIds').isArray({ min: 1 }).withMessage('User IDs array is required'),
     body('userIds.*').isMongoId().withMessage('Invalid user ID')
   ],
-  validateRequest, 
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const bulkData: BulkUserActionDto = req.body;
       const suspendedBy = (req as any).user.id;
-      
+
       const result = await userService.bulkUpdate(
         { _id: { $in: bulkData.userIds } },
         { status: UserStatus.SUSPENDED },
         suspendedBy
       );
-      
+
       res.status(200).json(result);
     } catch (error) {
       console.error('Bulk suspend error:', error);
@@ -465,25 +465,25 @@ router.post('/bulk/suspend',
   }
 );
 
-router.post('/bulk/activate', 
-  authMiddleware, 
-  checkPermission(['admin']), 
+router.post('/bulk/activate',
+  authMiddleware,
+  checkPermission(['admin']),
   [
     body('userIds').isArray({ min: 1 }).withMessage('User IDs array is required'),
     body('userIds.*').isMongoId().withMessage('Invalid user ID')
   ],
-  validateRequest, 
+  validateRequest,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const bulkData: BulkUserActionDto = req.body;
       const activatedBy = (req as any).user.id;
-      
+
       const result = await userService.bulkUpdate(
         { _id: { $in: bulkData.userIds } },
         { status: UserStatus.ACTIVE },
         activatedBy
       );
-      
+
       res.status(200).json(result);
     } catch (error) {
       console.error('Bulk activate error:', error);

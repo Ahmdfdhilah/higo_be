@@ -186,7 +186,7 @@ router.post('/logout-all', authMiddleware, async (req: Request, res: Response) =
 router.get('/me', authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const result = await userService.findById(userId);
+    const result = await userService.getUserById(userId);
     
     res.status(result.success ? 200 : 404).json(result);
   } catch (error) {
