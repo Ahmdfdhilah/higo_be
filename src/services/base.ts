@@ -69,29 +69,39 @@ export abstract class BaseService<T extends Document> {
     useCache: boolean = true
   ): Promise<ApiResponse<PaginatedResponse<T> | T[]>> {
     try {
+      console.log('🔍 BaseService.findAll called with:', { filter, pagination, useCache });
+      
       const cacheKey = this.getCacheKey('findAll', JSON.stringify(filter), JSON.stringify(pagination));
+      console.log('🔑 Cache key:', cacheKey);
       
       if (useCache) {
         const cached = await CacheService.get<PaginatedResponse<T> | T[]>(cacheKey);
         if (cached) {
+          console.log('💾 Returning cached result');
           return {
             success: true,
             message: 'Items retrieved successfully',
             data: cached
           };
         }
+        console.log('🚫 No cached result found');
       }
 
       let items: PaginatedResponse<T> | T[];
       
       if (pagination) {
+        console.log('📄 Using pagination, calling repository.findWithPagination');
         items = await this.repository.findWithPagination(filter, pagination);
       } else {
+        console.log('📋 No pagination, calling repository.find');
         items = await this.repository.find(filter);
       }
 
+      console.log('📊 BaseService result:', items ? (Array.isArray(items) ? `Array with ${items.length} items` : `Paginated result: ${JSON.stringify(items)}`) : 'null/undefined');
+
       if (useCache) {
         await CacheService.set(cacheKey, items, this.cacheTTL);
+        console.log('💾 Result cached');
       }
 
       return {
@@ -100,6 +110,7 @@ export abstract class BaseService<T extends Document> {
         data: items
       };
     } catch (error) {
+      console.error('❌ BaseService.findAll error:', error);
       return this.handleError(error, 'findAll');
     }
   }

@@ -66,6 +66,11 @@ export abstract class BaseRepository<T extends Document> {
       const { page = 1, size = 10, search } = pagination;
       const skip = (page - 1) * size;
 
+      console.log('🔍 BaseRepository.findWithPagination called on model:', this.model.modelName);
+      console.log('📊 Collection name:', this.model.collection.name);
+      console.log('🎯 Filter:', JSON.stringify(filter));
+      console.log('📄 Pagination:', { page, size, skip });
+
       // Add search functionality if search term provided
       if (search && this.getSearchFields().length > 0) {
         const searchRegex = new RegExp(search, 'i');
@@ -73,6 +78,7 @@ export abstract class BaseRepository<T extends Document> {
           [field]: { $regex: searchRegex }
         }));
         filter = { ...filter, $or: searchConditions };
+        console.log('🔍 Search filter applied:', JSON.stringify(filter));
       }
 
       let query = this.model.find(filter).skip(skip).limit(size);
@@ -84,6 +90,8 @@ export abstract class BaseRepository<T extends Document> {
         query.exec(),
         this.model.countDocuments(filter)
       ]);
+
+      console.log('✅ Query results:', { itemsCount: items.length, total });
 
       return {
         items,

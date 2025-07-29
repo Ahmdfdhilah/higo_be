@@ -106,16 +106,32 @@ export class CustomerService extends BaseService<ICustomer> {
     filters?: any
   ): Promise<ApiResponse<PaginatedResponse<CustomerResponseDto> | CustomerResponseDto[]>> {
     try {
-      let customers;
+      console.log('🔍 getAllCustomers called with:', { pagination, filters });
+      
+      // Debug: Check total count in database
+      const totalCount = await this.repository.count({});
+      console.log('📊 Total customers in database:', totalCount);
+      
+      let customers: ApiResponse<PaginatedResponse<ICustomer> | ICustomer[]>;
       
       if (filters && Object.keys(filters).length > 0) {
-        customers = await (this.repository as CustomerRepository).findWithFilters(filters, pagination);
+        console.log('🎯 Using filtered query');
+        const repoResult = await (this.repository as CustomerRepository).findWithFilters(filters, pagination);
+        customers = {
+          success: true,
+          message: 'Customers retrieved successfully',
+          data: repoResult
+        };
       } else {
-        customers = await super.findAll({}, pagination);
+        console.log('📋 Using findAll query');
+        customers = await super.findAll({}, pagination, false); // Disable cache
       }
       
-      // Handle null/undefined customers
-      if (!customers) {
+      console.log('✅ Query result from BaseService:', customers.success, customers.message);
+      
+      // Handle service error
+      if (!customers.success || !customers.data) {
+        console.log('⚠️ BaseService returned error or no data');
         return {
           success: true,
           message: 'No customers found',
@@ -128,18 +144,29 @@ export class CustomerService extends BaseService<ICustomer> {
           } : []
         };
       }
+
+      const customerData = customers.data;
+      console.log('📊 Customer data type:', Array.isArray(customerData) ? 'Array' : 'Paginated');
       
       // Convert based on whether it's paginated or not
       let data: PaginatedResponse<CustomerResponseDto> | CustomerResponseDto[];
       
-      if (Array.isArray(customers)) {
-        data = customers.map((customer: ICustomer) => this.toCustomerResponseDto(customer));
+      if (Array.isArray(customerData)) {
+        console.log('🔄 Converting array data');
+        data = customerData.map((customer: ICustomer) => this.toCustomerResponseDto(customer));
       } else {
         // Type guard for paginated response
-        const paginatedCustomers = customers as PaginatedResponse<ICustomer>;
+        const paginatedCustomers = customerData as PaginatedResponse<ICustomer>;
+        
+        console.log('🔍 Paginated customers check:', {
+          hasItems: !!paginatedCustomers.items,
+          itemsLength: paginatedCustomers.items?.length,
+          total: paginatedCustomers.total
+        });
         
         // Handle case where items might be undefined
         if (!paginatedCustomers.items) {
+          console.log('⚠️ paginatedCustomers.items is falsy, returning empty result');
           return {
             success: true,
             message: 'No customers found',
@@ -153,6 +180,7 @@ export class CustomerService extends BaseService<ICustomer> {
           };
         }
         
+        console.log('🔄 Converting paginated data');
         data = {
           ...paginatedCustomers,
           items: paginatedCustomers.items.map((customer: ICustomer) => this.toCustomerResponseDto(customer))
