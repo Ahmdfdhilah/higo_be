@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import authRoutes from './endpoints/auth';
 import usersRoutes from './endpoints/users';
+import customersRoutes from './endpoints/customers';
 import { Request, Response } from 'express';
 
 const router = Router();
@@ -28,6 +29,7 @@ router.get('/', (req: Request, res: Response) => {
       endpoints: {
         auth: '/api/auth',
         users: '/api/users',
+        customers: '/api/customers',
         health: '/api/health'
       },
       documentation: 'https://docs.api.higo.com'
@@ -38,6 +40,7 @@ router.get('/', (req: Request, res: Response) => {
 // Mount route modules
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
+router.use('/customers', customersRoutes);
 
 // 404 handler for API routes
 router.use('*catchall', (req: Request, res: Response) => {
