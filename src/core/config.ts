@@ -14,7 +14,7 @@ export const config = {
   
   // JWT
   jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30m', // 30 minutes session timeout
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   
   // Rate Limiting

@@ -58,6 +58,44 @@ export class JWTService {
     return { accessToken, refreshToken };
   }
 
+  public static setSecureCookies(res: Response, tokens: AuthTokens): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Set access token as HttpOnly, Secure cookie (30 minutes)
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true, // Tidak bisa diakses JavaScript
+      secure: isProduction, // HTTPS di production
+      sameSite: 'strict', // CSRF protection
+      maxAge: 30 * 60 * 1000, // 30 minutes in milliseconds
+      path: '/'
+    });
+
+    // Set refresh token as HttpOnly, Secure cookie (30 days)
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      path: '/'
+    });
+  }
+
+  public static clearSecureCookies(res: Response): void {
+    res.clearCookie('accessToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    });
+    
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    });
+  }
+
   public static verifyAccessToken(token: string): JwtPayload {
     try {
       return jwt.verify(token, config.jwtSecret) as JwtPayload;
@@ -140,8 +178,13 @@ export const authenticateToken = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
+    // Check for token in cookies first (HttpOnly), then Authorization header
+    let token = req.cookies?.accessToken;
+    
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      token = authHeader && authHeader.split(' ')[1];
+    }
 
     if (!token) {
       res.status(401).json({

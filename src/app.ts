@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { config } from './core/config';
 import { database } from './core/database';
 import { redisClient } from './core/redis';
@@ -42,6 +43,7 @@ class App {
     this.app.use(addCorrelationId);
     this.app.use(requestLogger);
 
+    this.app.use(cookieParser()); // Enable cookie parsing
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
