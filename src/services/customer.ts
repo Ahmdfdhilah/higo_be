@@ -43,14 +43,15 @@ export class CustomerService extends BaseService<ICustomer> {
       
       if (result.success && result.data) {
         return {
-          ...result,
+          success: true,
+          message: 'Customer found successfully',
           data: this.toCustomerResponseDto(result.data as ICustomer)
         };
       }
       
       return {
-        success: result.success,
-        message: result.message,
+        success: false,
+        message: 'Customer not found',
         data: null
       };
     } catch (error) {
@@ -113,6 +114,21 @@ export class CustomerService extends BaseService<ICustomer> {
         customers = await super.findAll({}, pagination);
       }
       
+      // Handle null/undefined customers
+      if (!customers) {
+        return {
+          success: true,
+          message: 'No customers found',
+          data: pagination ? {
+            items: [],
+            total: 0,
+            page: pagination.page || 1,
+            size: pagination.size || 10,
+            pages: 0
+          } : []
+        };
+      }
+      
       // Convert based on whether it's paginated or not
       let data: PaginatedResponse<CustomerResponseDto> | CustomerResponseDto[];
       
@@ -121,6 +137,22 @@ export class CustomerService extends BaseService<ICustomer> {
       } else {
         // Type guard for paginated response
         const paginatedCustomers = customers as PaginatedResponse<ICustomer>;
+        
+        // Handle case where items might be undefined
+        if (!paginatedCustomers.items) {
+          return {
+            success: true,
+            message: 'No customers found',
+            data: {
+              items: [],
+              total: 0,
+              page: paginatedCustomers.page || 1,
+              size: paginatedCustomers.size || 10,
+              pages: 0
+            }
+          };
+        }
+        
         data = {
           ...paginatedCustomers,
           items: paginatedCustomers.items.map((customer: ICustomer) => this.toCustomerResponseDto(customer))
@@ -142,6 +174,24 @@ export class CustomerService extends BaseService<ICustomer> {
   async getCustomerSummary(): Promise<ApiResponse<any>> {
     try {
       const summary = await (this.repository as CustomerRepository).getSummaryStats();
+      
+      // Handle empty result
+      if (!summary || !Array.isArray(summary) || summary.length === 0) {
+        return {
+          success: true,
+          message: 'No customer data available for summary',
+          data: {
+            totalCustomers: 0,
+            uniqueLocations: 0,
+            avgAge: 0,
+            genderDistribution: { male: 0, female: 0 },
+            deviceDistribution: { samsung: 0, apple: 0 },
+            locationDistribution: { urban: 0, suburban: 0 },
+            interestDistribution: { socialMedia: 0, gaming: 0 },
+            dateRange: { earliest: null, latest: null }
+          }
+        };
+      }
       
       return {
         success: true,
