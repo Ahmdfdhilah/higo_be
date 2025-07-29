@@ -11,8 +11,8 @@ import {
   ChangeUserRoleDto,
   UserQueryDto
 } from '../../schemas/user';
-import { paginationValidation } from '@/validations/base';
-import { bulkUserActionValidation, changeUserRoleValidation, createUserValidation, inactiveUsersValidation, roleParamWithPaginationValidation, updateUserByIdValidation, userActionValidation, userByIdValidation } from '@/validations/user';
+import { paginationValidation } from '../../validations/base';
+import { bulkUserActionValidation, changeUserRoleValidation, createUserValidation, inactiveUsersValidation, roleParamWithPaginationValidation, updateUserByIdValidation, userActionValidation, userByIdValidation } from '../../validations/user';
 
 const router = Router();
 const userService = new UserService();

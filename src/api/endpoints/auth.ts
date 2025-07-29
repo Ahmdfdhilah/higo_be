@@ -8,7 +8,7 @@ import {
   UpdateProfileDto 
 } from '../../schemas/auth';
 import { ChangePasswordDto } from '../../schemas/user';
-import { changePasswordValidation, loginValidation, registerValidation, updateProfileValidation } from '@/validations/auth';
+import { changePasswordValidation, loginValidation, registerValidation, updateProfileValidation } from '../../validations/auth';
 
 const router = Router();
 const userService = new UserService();

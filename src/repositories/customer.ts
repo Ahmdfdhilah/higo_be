@@ -187,4 +187,28 @@ export class CustomerRepository extends BaseRepository<ICustomer> {
     
     return this.find(query);
   }
+
+  // Bulk operations for CSV import performance
+  async bulkWrite(operations: any[]): Promise<any> {
+    try {
+      return await this.model.bulkWrite(operations, { 
+        ordered: false, // Continue on individual errors
+        writeConcern: { w: 1, j: false } // Optimize for speed
+      });
+    } catch (error) {
+      throw this.handleError(error, 'bulkWrite');
+    }
+  }
+
+  // Bulk insert optimized for large datasets
+  async bulkInsert(documents: Partial<ICustomer>[]): Promise<any> {
+    try {
+      return await this.model.insertMany(documents, {
+        ordered: false, // Continue on individual errors
+        rawResult: true // Get detailed results
+      });
+    } catch (error) {
+      throw this.handleError(error, 'bulkInsert');
+    }
+  }
 }
