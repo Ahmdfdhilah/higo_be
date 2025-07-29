@@ -21,6 +21,7 @@ RUN npm ci --only=production && npm cache clean --force
 # Development dependencies stage
 FROM base AS dev-dependencies
 RUN npm ci
+RUN npm install -g nodemon ts-node
 
 # Build stage
 FROM dev-dependencies AS build
@@ -54,8 +55,9 @@ CMD ["node", "dist/app.js"]
 
 # Development stage
 FROM dev-dependencies AS development
-COPY src ./src
-COPY tsconfig.json ./
+COPY --chown=nodeuser:nodejs src ./src
+COPY --chown=nodeuser:nodejs tsconfig.json ./
+COPY --chown=nodeuser:nodejs package*.json ./
 
 # Switch to non-root user
 USER nodeuser
@@ -64,4 +66,4 @@ USER nodeuser
 EXPOSE 3000 9229
 
 # Start with nodemon for development
-CMD ["npm", "run", "dev"]
+CMD ["npx", "nodemon", "src/app.ts"]

@@ -9,7 +9,7 @@ services:
       - NODE_ENV=development
       - PORT=3000
       - MONGODB_URI=mongodb://higouser:higopassword@mongodb:27017/higoapp
-      - REDIS_URL=redis://:higoredispassword@redis:6379
+      - REDIS_URL=redis://:devredispassword@redis:6379
       - JWT_SECRET=${JWT_SECRET:-dev-super-secret-jwt-key}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1d}
       - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
@@ -22,7 +22,7 @@ services:
       - ./package.json:/app/package.json:ro
       - ./tsconfig.json:/app/tsconfig.json:ro
       - /app/node_modules
-    command: ["npm", "run", "dev"]
+    command: ["npx", "nodemon", "src/app.ts"]
     stdin_open: true
     tty: true
 
