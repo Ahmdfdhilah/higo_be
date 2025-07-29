@@ -33,6 +33,11 @@ class RedisRateLimitStore implements RedisStore {
 
   async incr(key: string): Promise<number> {
     try {
+      if (!redisClient.isConnected()) {
+        console.warn('Redis not connected, using fallback rate limiting');
+        return 1; // Allow request if Redis unavailable
+      }
+      
       const client = redisClient.getClient();
       const current = await client.incr(key);
       
@@ -43,7 +48,7 @@ class RedisRateLimitStore implements RedisStore {
       return current;
     } catch (error) {
       console.error('Redis rate limit error:', error);
-      return 1;
+      return 1; // Allow request on error
     }
   }
 
@@ -74,8 +79,7 @@ const createRedisRateLimit = (options: {
   message?: string;
   keyGenerator?: (req: Request) => string;
 }) => {
-  const store = new RedisRateLimitStore(options.windowMs);
-  
+  // Gunakan in-memory store sebagai fallback
   return rateLimit({
     windowMs: options.windowMs,
     max: options.max,
@@ -84,23 +88,9 @@ const createRedisRateLimit = (options: {
       message: options.message || 'Too many requests, please try again later'
     } as ApiResponse,
     keyGenerator: options.keyGenerator || generateKeyByIp,
-    store: {
-      incr: async (key: string) => {
-        const totalHits = await store.incr(key);
-        const resetTime = await store.resetTime(key);
-        return { totalHits, resetTime };
-      },
-      decrement: store.decrement.bind(store),
-      resetKey: async (key: string) => {
-        try {
-          await redisClient.del(key);
-        } catch (error) {
-          console.error('Redis rate limit reset key error:', error);
-        }
-      }
-    } as any,
     standardHeaders: true,
     legacyHeaders: false,
+    // Gunakan default memory store (tanpa Redis)
   });
 };
 
