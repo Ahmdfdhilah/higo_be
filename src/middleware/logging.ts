@@ -1,6 +1,5 @@
 import morgan from 'morgan';
 import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 import { isDevelopment } from '../core/config';
 
 declare global {
@@ -12,11 +11,19 @@ declare global {
   }
 }
 
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export const addCorrelationId = (req: Request, res: Response, next: any) => {
-  req.correlationId = req.headers['x-correlation-id'] as string || uuidv4();
+  req.correlationId = req.headers['x-correlation-id'] as string || generateUUID();
   req.startTime = Date.now();
   
-  res.setHeader('x-correlation-id', req.correlationId);
+  res.setHeader('x-correlation-id', req.correlationId || '');
   next();
 };
 

@@ -124,7 +124,8 @@ export class RedisClient {
 
   public async expire(key: string, seconds: number): Promise<boolean> {
     try {
-      return await this.client.expire(key, seconds);
+      const result = await this.client.expire(key, seconds);
+      return result === 1;
     } catch (error) {
       console.error('Redis EXPIRE error:', error);
       throw error;

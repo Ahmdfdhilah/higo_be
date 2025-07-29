@@ -7,10 +7,10 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   
   // Database
-  mongodbUri: process.env.MONGODB_URI || 'mongodb://mongodb:27017/higoapp',
+  mongodbUri: process.env.MONGODB_URI || 'mongodb://higouser:higopassword@mongodb:27017/higoapp',
   
   // Redis
-  redisUrl: process.env.REDIS_URL || 'redis://redis:6379',
+  redisUrl: process.env.REDIS_URL || 'redis://:higoredispassword@redis:6379',
   
   // JWT
   jwtSecret: process.env.JWT_SECRET || 'your-super-secret-jwt-key',

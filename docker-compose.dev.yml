@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      target: development
+    container_name: higo-app-dev
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://higouser:higopassword@mongodb:27017/higoapp
+      - REDIS_URL=redis://:higoredispassword@redis:6379
+      - JWT_SECRET=${JWT_SECRET:-dev-super-secret-jwt-key}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1d}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3001}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+      - "${DEBUG_PORT:-9229}:9229"
+    volumes:
+      - ./src:/app/src:ro
+      - ./package.json:/app/package.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - /app/node_modules
+    command: ["npm", "run", "dev"]
+    stdin_open: true
+    tty: true
+
+  mongodb:
+    container_name: higo-mongodb-dev
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=devpassword
+      - MONGO_INITDB_DATABASE=higoapp_dev
+    ports:
+      - "${MONGODB_PORT:-27017}:27017"
+    volumes:
+      - mongodb-dev-data:/data/db
+      - mongodb-dev-logs:/var/log/mongodb
+      - ./docker/mongodb/init:/docker-entrypoint-initdb.d:ro
+
+  redis:
+    container_name: higo-redis-dev
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-dev-data:/data
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "devredispassword"]
+
+volumes:
+  mongodb-dev-data:
+    driver: local
+  mongodb-dev-logs:
+    driver: local
+  redis-dev-data:
+    driver: local

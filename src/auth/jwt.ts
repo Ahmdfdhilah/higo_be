@@ -29,14 +29,14 @@ export class JWTService {
     };
 
     return jwt.sign(payload, config.jwtSecret, {
-      expiresIn: config.jwtExpiresIn,
-    });
+      expiresIn: config.jwtExpiresIn
+    } as jwt.SignOptions);
   }
 
   public static generateRefreshToken(): string {
     return jwt.sign({}, config.jwtSecret, {
-      expiresIn: config.jwtRefreshExpiresIn,
-    });
+      expiresIn: config.jwtRefreshExpiresIn
+    } as jwt.SignOptions);
   }
 
   public static async generateTokenPair(user: IUser): Promise<AuthTokens> {

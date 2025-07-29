@@ -69,7 +69,7 @@ const userSchema = new Schema<IUser>({
 }, {
   timestamps: true,
   toJSON: {
-    transform: function(doc, ret) {
+    transform: function(doc: any, ret: any) {
       delete ret.password;
       delete ret.refreshTokens;
       return ret;
@@ -103,7 +103,7 @@ userSchema.methods.addRefreshToken = async function(token: string): Promise<void
 };
 
 userSchema.methods.removeRefreshToken = async function(token: string): Promise<void> {
-  this.refreshTokens = this.refreshTokens.filter(t => t !== token);
+  this.refreshTokens = this.refreshTokens.filter((t: string) => t !== token);
   await this.save();
 };
 
