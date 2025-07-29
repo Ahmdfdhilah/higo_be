@@ -3,7 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { config } from '../core/config';
 import { redisClient } from '../core/redis';
 import { User, IUser } from '../models/user';
-import { ApiResponse, AuthTokens } from '../schemas/base';
+import { ApiResponse } from '../schemas/base';
+import { TokenResponseDto } from '../schemas/auth';
 
 export interface JwtPayload {
   userId: string;
@@ -21,11 +22,11 @@ export class JWTService {
   private static blacklistKeyPrefix = 'jwt_blacklist:';
   private static refreshTokenPrefix = 'refresh_token:';
 
-  public static generateAccessToken(user: IUser): string {
+  public generateAccessToken(userId: string, role: string): string {
     const payload: JwtPayload = {
-      userId: user._id.toString(),
-      email: user.email,
-      role: user.role
+      userId,
+      email: '', // Will be populated when needed
+      role
     };
 
     return jwt.sign(payload, config.jwtSecret, {
@@ -33,21 +34,21 @@ export class JWTService {
     } as jwt.SignOptions);
   }
 
-  public static generateRefreshToken(): string {
+  public generateRefreshToken(): string {
     return jwt.sign({}, config.jwtSecret, {
       expiresIn: config.jwtRefreshExpiresIn
     } as jwt.SignOptions);
   }
 
-  public static async generateTokenPair(user: IUser): Promise<AuthTokens> {
-    const accessToken = this.generateAccessToken(user);
+  public async generateTokenPair(user: IUser): Promise<TokenResponseDto> {
+    const accessToken = this.generateAccessToken(user._id.toString(), user.role);
     const refreshToken = this.generateRefreshToken();
 
     await user.addRefreshToken(refreshToken);
     
     try {
       await redisClient.set(
-        `${this.refreshTokenPrefix}${refreshToken}`,
+        `${JWTService.refreshTokenPrefix}${refreshToken}`,
         user._id.toString(),
         30 * 24 * 60 * 60 // 30 days in seconds
       );
@@ -58,7 +59,7 @@ export class JWTService {
     return { accessToken, refreshToken };
   }
 
-  public static setSecureCookies(res: Response, tokens: AuthTokens): void {
+  public static setSecureCookies(res: Response, tokens: TokenResponseDto): void {
     const isProduction = process.env.NODE_ENV === 'production';
     
     // Set access token as HttpOnly, Secure cookie (30 minutes)
@@ -148,7 +149,7 @@ export class JWTService {
     }
   }
 
-  public static async refreshAccessToken(refreshToken: string): Promise<AuthTokens> {
+  public static async refreshAccessToken(refreshToken: string): Promise<TokenResponseDto> {
     try {
       this.verifyRefreshToken(refreshToken);
       
@@ -163,9 +164,10 @@ export class JWTService {
       }
 
       await user.removeRefreshToken(refreshToken);
-      await this.invalidateRefreshToken(refreshToken);
+      await JWTService.invalidateRefreshToken(refreshToken);
 
-      return await this.generateTokenPair(user);
+      const jwtService = new JWTService();
+      return await jwtService.generateTokenPair(user);
     } catch (error) {
       throw new Error('Failed to refresh token');
     }
@@ -244,3 +246,6 @@ export const requireRole = (roles: string[]) => {
     next();
   };
 };
+
+// Export the main auth middleware
+export const authMiddleware = authenticateToken;

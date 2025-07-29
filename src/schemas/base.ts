@@ -1,3 +1,4 @@
+// Base API Response Types
 export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
@@ -10,6 +11,20 @@ export interface StatusResponse {
   data?: any;
 }
 
+export interface ErrorResponse {
+  success: false;
+  message: string;
+  data: null;
+  errors?: ValidationError[];
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  value?: any;
+}
+
+// Pagination Types
 export interface PaginationParams {
   page?: number;
   size?: number;
@@ -24,23 +39,49 @@ export interface PaginatedResponse<T> {
   pages: number;
 }
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
+export interface SortParams {
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
-export interface LoginRequest {
-  email: string;
-  password: string;
+export interface QueryParams extends PaginationParams, SortParams {
+  filters?: Record<string, any>;
 }
 
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
+// Health Check Types
+export interface HealthCheckResponse {
+  status: 'healthy' | 'unhealthy';
+  timestamp: string;
+  services: {
+    database: ServiceHealth;
+    redis: ServiceHealth;
+  };
 }
 
-export interface RefreshTokenRequest {
-  refreshToken: string;
+export interface ServiceHealth {
+  status: 'up' | 'down';
+  responseTime?: number;
+  error?: string;
+}
+
+// Generic CRUD Response Types
+export interface CreateResponse<T> extends ApiResponse<T> {
+  data: T;
+}
+
+export interface UpdateResponse<T> extends ApiResponse<T | null> {
+  data: T | null;
+}
+
+export interface DeleteResponse<T> extends ApiResponse<T | null> {
+  data: T | null;
+}
+
+export interface BulkResponse {
+  matchedCount: number;
+  modifiedCount: number;
+}
+
+export interface BulkDeleteResponse {
+  deletedCount: number;
 }

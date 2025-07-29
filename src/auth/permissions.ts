@@ -170,3 +170,26 @@ export const requireResourceOwnershipOrPermission = (permission: Permission) => 
     next();
   };
 };
+
+// Simple role-based check function for endpoints
+export const checkPermission = (allowedRoles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      } as ApiResponse);
+      return;
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions'
+      } as ApiResponse);
+      return;
+    }
+
+    next();
+  };
+};
