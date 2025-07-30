@@ -60,12 +60,12 @@ export abstract class BaseRepository<T extends Document> {
   async findWithPagination(
     filter: FilterQuery<T>,
     pagination: PaginationParams,
-    populate?: string | string[]
+    populate?: string | string[],
+    sort?: any
   ): Promise<PaginatedResponse<T>> {
     try {
       const { page = 1, size = 10, search } = pagination;
       const skip = (page - 1) * size;
-
 
       // Add search functionality if search term provided
       if (search && this.getSearchFields().length > 0) {
@@ -76,7 +76,15 @@ export abstract class BaseRepository<T extends Document> {
         filter = { ...filter, $or: searchConditions };
       }
 
+      // Apply default sort if not provided
+      const defaultSort = sort || this.getDefaultSort();
+
       let query = this.model.find(filter).skip(skip).limit(size);
+      
+      if (defaultSort) {
+        query = query.sort(defaultSort);
+      }
+      
       if (populate) {
         query = query.populate(populate);
       }
@@ -85,7 +93,6 @@ export abstract class BaseRepository<T extends Document> {
         query.exec(),
         this.model.countDocuments(filter)
       ]);
-
 
       return {
         items,
@@ -199,6 +206,10 @@ export abstract class BaseRepository<T extends Document> {
 
   protected getSearchFields(): string[] {
     return [];
+  }
+
+  protected getDefaultSort(): any {
+    return null;
   }
 
   protected handleError(error: any, operation: string): Error {

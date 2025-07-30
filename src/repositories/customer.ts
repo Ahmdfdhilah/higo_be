@@ -12,6 +12,10 @@ export class CustomerRepository extends BaseRepository<ICustomer> {
     return ['locationName', 'userName', 'email'];
   }
 
+  protected getDefaultSort(): any {
+    return { number: 1 }; // Sort by number in ascending order
+  }
+
   // Filter by gender
   async findByGender(gender: Gender, pagination?: PaginationParams): Promise<PaginatedResponse<ICustomer> | ICustomer[]> {
     const filter = { gender };
