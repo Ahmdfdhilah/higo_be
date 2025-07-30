@@ -1,0 +1,490 @@
+{
+	"info": {
+		"_postman_id": "customer-api-collection",
+		"name": "Higo Backend - Customer API",
+		"description": "Complete collection of customer endpoints with sorting by number and optimized caching",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@higo.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Customer Management",
+			"item": [
+				{
+					"name": "Get All Customers (Paginated with Summary)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers?page=1&size=10&search=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Items per page (default: 10)"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Search in locationName, userName, email"
+								}
+							]
+						},
+						"description": "Get all customers with pagination, sorted by number (ascending). Includes cached summary data."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Customers with Filters",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers?page=1&size=10&gender=Male&deviceBrand=Samsung&digitalInterest=Gaming&locationType=urban&locationName=Jakarta&minAge=18&maxAge=65&startDate=2024-01-01&endDate=2024-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "gender",
+									"value": "Male",
+									"description": "Filter by gender: Male, Female, Other"
+								},
+								{
+									"key": "deviceBrand",
+									"value": "Samsung",
+									"description": "Filter by device: Samsung, Apple, Huawei, Xiaomi, Oppo, Vivo, Other"
+								},
+								{
+									"key": "digitalInterest",
+									"value": "Gaming",
+									"description": "Filter by interest: Social Media, Gaming, Shopping, News, Entertainment, Education, Health, Finance, Travel, Food, Other"
+								},
+								{
+									"key": "locationType",
+									"value": "urban",
+									"description": "Filter by location type: urban, sub urban, rural"
+								},
+								{
+									"key": "locationName",
+									"value": "Jakarta",
+									"description": "Filter by location name (partial match)"
+								},
+								{
+									"key": "minAge",
+									"value": "18",
+									"description": "Minimum age filter"
+								},
+								{
+									"key": "maxAge",
+									"value": "65",
+									"description": "Maximum age filter"
+								},
+								{
+									"key": "startDate",
+									"value": "2024-01-01",
+									"description": "Start date filter (YYYY-MM-DD)"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31",
+									"description": "End date filter (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Get filtered customers with all available filter options"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/summary",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"summary"
+							]
+						},
+						"description": "Get customer summary statistics (cached for 5 minutes)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Customer by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/{{customerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"{{customerId}}"
+							]
+						},
+						"description": "Get specific customer by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"number\": 1001,\n  \"locationName\": \"Jakarta Pusat\",\n  \"date\": \"2024-07-30T00:00:00.000Z\",\n  \"loginHour\": \"14:30\",\n  \"userName\": \"john_doe\",\n  \"birthYear\": 1990,\n  \"gender\": \"Male\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"+628123456789\",\n  \"deviceBrand\": \"Samsung\",\n  \"digitalInterest\": \"Gaming\",\n  \"locationType\": \"urban\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/customers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers"
+							]
+						},
+						"description": "Create a new customer"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Customer",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"locationName\": \"Jakarta Selatan\",\n  \"userName\": \"john_doe_updated\",\n  \"email\": \"john.doe.updated@example.com\",\n  \"phoneNumber\": \"+628987654321\",\n  \"deviceBrand\": \"Apple\",\n  \"digitalInterest\": \"Shopping\",\n  \"locationType\": \"sub urban\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/{{customerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"{{customerId}}"
+							]
+						},
+						"description": "Update existing customer"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Customer",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/{{customerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"{{customerId}}"
+							]
+						},
+						"description": "Delete customer by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "CSV Import",
+			"item": [
+				{
+					"name": "Import Customers from CSV",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "csvFile",
+									"type": "file",
+									"src": "/path/to/your/customers.csv",
+									"description": "CSV file containing customer data"
+								},
+								{
+									"key": "skipValidation",
+									"value": "false",
+									"type": "text",
+									"description": "Skip validation (true/false)"
+								},
+								{
+									"key": "continueOnError",
+									"value": "true",
+									"type": "text",
+									"description": "Continue processing on errors (true/false)"
+								},
+								{
+									"key": "batchSize",
+									"value": "1000",
+									"type": "text",
+									"description": "Batch size for processing"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/import/csv",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"import",
+								"csv"
+							]
+						},
+						"description": "Import customers from CSV file (max 200MB). Returns importId for tracking progress."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Import Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/import/status/{{importId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"import",
+								"status",
+								"{{importId}}"
+							]
+						},
+						"description": "Get CSV import progress status"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Import",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/import/cancel/{{importId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"import",
+								"cancel",
+								"{{importId}}"
+							]
+						},
+						"description": "Cancel ongoing import process"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Imports",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/customers/import/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"customers",
+								"import",
+								"active"
+							]
+						},
+						"description": "Get all currently active import processes"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customerId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "importId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

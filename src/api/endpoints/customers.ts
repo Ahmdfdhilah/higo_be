@@ -5,6 +5,7 @@ import fs from 'fs';
 import { CustomerService } from '../../services/customer';
 import { CSVImportService } from '../../services/csvImport';
 import { validateRequest } from '../../middleware/validation';
+import { config } from '../../core/config';
 import {
   createCustomerValidation,
   updateCustomerByIdValidation,
@@ -22,9 +23,16 @@ const customerService = new CustomerService();
 const csvImportService = new CSVImportService();
 
 // Multer configuration for CSV file uploads
+const uploadDir = path.join(config.uploadDir, 'csv');
+
+// Ensure upload directory exists
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: (req: any, file: any, cb: any) => {
-    cb(null, 'uploads/csv/'); // Make sure this directory exists
+    cb(null, uploadDir);
   },
   filename: (req: any, file: any, cb: any) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -42,7 +50,7 @@ const upload = multer({
     }
   },
   limits: {
-    fileSize: 200 * 1024 * 1024, // 200MB limit
+    fileSize: config.maxFileSize,
     files: 1 // Only allow 1 file at a time
   }
 }).single('csvFile');

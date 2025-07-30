@@ -116,6 +116,10 @@ export class CustomerService extends BaseService<ICustomer> {
     filters?: any
   ): Promise<ApiResponse<PaginatedCustomersWithSummary<CustomerResponseDto> | CustomersWithSummary<CustomerResponseDto>>> {
     try {
+      // Get summary data once at the beginning (from cache if available)
+      const summaryResponse = await this.getCustomerSummary();
+      const summaryData: CustomerSummaryDto | null = (summaryResponse.success && summaryResponse.data) ? summaryResponse.data : null;
+      
       let customers: ApiResponse<PaginatedResponse<ICustomer> | ICustomer[]>;
       
       if (filters && Object.keys(filters).length > 0) {
@@ -140,17 +144,13 @@ export class CustomerService extends BaseService<ICustomer> {
             page: pagination.page || 1,
             size: pagination.size || 10,
             pages: 0,
-            summary: null
-          } : Object.assign([], { summary: null })
+            summary: summaryData
+          } : Object.assign([], { summary: summaryData })
         };
         return emptyResponse;
       }
 
       const customerData = customers.data;
-      
-      // Get summary data using the same cache key
-      const summaryResponse = await this.getCustomerSummary();
-      const summaryData: CustomerSummaryDto | null = (summaryResponse.success && summaryResponse.data) ? summaryResponse.data : null;
       
       // Convert based on whether it's paginated or not
       let data: PaginatedCustomersWithSummary<CustomerResponseDto> | CustomersWithSummary<CustomerResponseDto>;

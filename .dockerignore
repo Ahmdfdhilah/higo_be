@@ -3,10 +3,12 @@ npm-debug.log
 .git
 .gitignore
 README.md
+README.railway.md
 .env
 .env.local
 .env.development
 .env.production
+.env.railway
 .nyc_output
 coverage
 .DS_Store
@@ -17,3 +19,5 @@ dist
 *.swp
 *.swo
 *~
+uploads/csv/*.csv
+*.postman_collection.json
