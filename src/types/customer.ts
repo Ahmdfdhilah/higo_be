@@ -93,10 +93,9 @@ export interface CustomerFilters extends BaseFilters {
   loginHourEnd?: string;
 }
 
-// Summary statistics
+// Summary statistics - matches actual aggregation output
 export interface CustomerSummaryDto {
   totalCustomers: number;
-  uniqueUsers: number;
   uniqueLocations: number;
   avgAge: number;
   
@@ -140,6 +139,31 @@ export interface CustomerSummaryDto {
     latest: Date | null;
   };
 }
+
+// Empty summary for when no data is available
+export interface EmptyCustomerSummaryDto {
+  totalCustomers: 0;
+  uniqueLocations: 0;
+  avgAge: 0;
+  genderDistribution: { male: 0; female: 0 };
+  deviceDistribution: { samsung: 0; apple: 0 };
+  locationDistribution: { urban: 0; suburban: 0 };
+  interestDistribution: { socialMedia: 0; gaming: 0 };
+  dateRange: { earliest: null; latest: null };
+}
+
+// Type for paginated customer response with summary
+export interface PaginatedCustomersWithSummary<T> {
+  items: T[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+  summary?: CustomerSummaryDto | null;
+}
+
+// Type for customer list with summary
+export type CustomersWithSummary<T> = T[] & { summary?: CustomerSummaryDto | null };
 
 // CSV Import related types
 export interface CSVImportProgress {

@@ -5,8 +5,13 @@ import { ApiResponse, PaginationParams, PaginatedResponse } from '../types/base'
 import { 
   CreateCustomerDto, 
   UpdateCustomerDto,
-  CustomerResponseDto
+  CustomerResponseDto,
+  CustomerSummaryDto,
+  EmptyCustomerSummaryDto,
+  PaginatedCustomersWithSummary,
+  CustomersWithSummary
 } from '../types/customer';
+import { CacheService } from '../utils/cache';
 
 export class CustomerService extends BaseService<ICustomer> {
   constructor() {
@@ -70,6 +75,9 @@ export class CustomerService extends BaseService<ICustomer> {
       
       const customer = await this.repository.create(processedData);
       await this.afterCreate(customer);
+      
+      // Invalidate summary cache
+      await CacheService.del('customer:summary');
 
       return {
         success: true,
@@ -88,6 +96,8 @@ export class CustomerService extends BaseService<ICustomer> {
 
       if (customer) {
         await this.invalidateCache();
+        // Invalidate summary cache
+        await CacheService.del('customer:summary');
       }
 
       return {
@@ -100,11 +110,11 @@ export class CustomerService extends BaseService<ICustomer> {
     }
   }
 
-  // Get all customers with pagination and filters
+  // Get all customers with pagination and filters, including summary
   async getAllCustomers(
     pagination?: PaginationParams, 
     filters?: any
-  ): Promise<ApiResponse<PaginatedResponse<CustomerResponseDto> | CustomerResponseDto[]>> {
+  ): Promise<ApiResponse<PaginatedCustomersWithSummary<CustomerResponseDto> | CustomersWithSummary<CustomerResponseDto>>> {
     try {
       let customers: ApiResponse<PaginatedResponse<ICustomer> | ICustomer[]>;
       
@@ -121,7 +131,7 @@ export class CustomerService extends BaseService<ICustomer> {
       
       // Handle service error
       if (!customers.success || !customers.data) {
-        return {
+        const emptyResponse = {
           success: true,
           message: 'No customers found',
           data: pagination ? {
@@ -129,18 +139,25 @@ export class CustomerService extends BaseService<ICustomer> {
             total: 0,
             page: pagination.page || 1,
             size: pagination.size || 10,
-            pages: 0
-          } : []
+            pages: 0,
+            summary: null
+          } : Object.assign([], { summary: null })
         };
+        return emptyResponse;
       }
 
       const customerData = customers.data;
       
+      // Get summary data using the same cache key
+      const summaryResponse = await this.getCustomerSummary();
+      const summaryData: CustomerSummaryDto | null = (summaryResponse.success && summaryResponse.data) ? summaryResponse.data : null;
+      
       // Convert based on whether it's paginated or not
-      let data: PaginatedResponse<CustomerResponseDto> | CustomerResponseDto[];
+      let data: PaginatedCustomersWithSummary<CustomerResponseDto> | CustomersWithSummary<CustomerResponseDto>;
       
       if (Array.isArray(customerData)) {
-        data = customerData.map((customer: ICustomer) => this.toCustomerResponseDto(customer));
+        const customerList = customerData.map((customer: ICustomer) => this.toCustomerResponseDto(customer));
+        data = Object.assign(customerList, { summary: summaryData });
       } else {
         // Type guard for paginated response
         const paginatedCustomers = customerData as PaginatedResponse<ICustomer>;
@@ -155,14 +172,16 @@ export class CustomerService extends BaseService<ICustomer> {
               total: 0,
               page: paginatedCustomers.page || 1,
               size: paginatedCustomers.size || 10,
-              pages: 0
+              pages: 0,
+              summary: summaryData
             }
           };
         }
         
         data = {
           ...paginatedCustomers,
-          items: paginatedCustomers.items.map((customer: ICustomer) => this.toCustomerResponseDto(customer))
+          items: paginatedCustomers.items.map((customer: ICustomer) => this.toCustomerResponseDto(customer)),
+          summary: summaryData
         };
       }
       
@@ -172,39 +191,52 @@ export class CustomerService extends BaseService<ICustomer> {
         data
       };
     } catch (error) {
-      return this.handleError<PaginatedResponse<CustomerResponseDto> | CustomerResponseDto[]>(error, 'getAllCustomers');
+      return this.handleError<PaginatedCustomersWithSummary<CustomerResponseDto> | CustomersWithSummary<CustomerResponseDto>>(error, 'getAllCustomers');
     }
   }
 
 
-  // Get summary statistics for dashboard
-  async getCustomerSummary(): Promise<ApiResponse<any>> {
+  // Get summary statistics for dashboard with caching
+  async getCustomerSummary(): Promise<ApiResponse<CustomerSummaryDto>> {
     try {
+      const cacheKey = 'customer:summary';
+      
+      // Try to get from cache first
+      const cachedSummary = await CacheService.get<ApiResponse<CustomerSummaryDto>>(cacheKey);
+      if (cachedSummary) {
+        return cachedSummary;
+      }
+
       const summary = await (this.repository as CustomerRepository).getSummaryStats();
       
-      // Handle empty result
-      if (!summary || !Array.isArray(summary) || summary.length === 0) {
-        return {
-          success: true,
-          message: 'No customer data available for summary',
-          data: {
-            totalCustomers: 0,
-            uniqueLocations: 0,
-            avgAge: 0,
-            genderDistribution: { male: 0, female: 0 },
-            deviceDistribution: { samsung: 0, apple: 0 },
-            locationDistribution: { urban: 0, suburban: 0 },
-            interestDistribution: { socialMedia: 0, gaming: 0 },
-            dateRange: { earliest: null, latest: null }
-          }
-        };
-      }
-      
-      return {
-        success: true,
-        message: 'Customer summary retrieved successfully',
-        data: summary[0] || {}
+      // Handle empty result with proper typing
+      const emptySummary: EmptyCustomerSummaryDto = {
+        totalCustomers: 0,
+        uniqueLocations: 0,
+        avgAge: 0,
+        genderDistribution: { male: 0, female: 0 },
+        deviceDistribution: { samsung: 0, apple: 0 },
+        locationDistribution: { urban: 0, suburban: 0 },
+        interestDistribution: { socialMedia: 0, gaming: 0 },
+        dateRange: { earliest: null, latest: null }
       };
+
+      const response: ApiResponse<CustomerSummaryDto> = summary && Array.isArray(summary) && summary.length > 0
+        ? {
+            success: true,
+            message: 'Customer summary retrieved successfully',
+            data: summary[0] as CustomerSummaryDto
+          }
+        : {
+            success: true,
+            message: 'No customer data available for summary',
+            data: emptySummary
+          };
+      
+      // Cache the response for 5 minutes
+      await CacheService.set(cacheKey, response, 300);
+      
+      return response;
     } catch (error) {
       return this.handleError(error, 'getCustomerSummary');
     }
@@ -225,6 +257,8 @@ export class CustomerService extends BaseService<ICustomer> {
 
       await this.repository.deleteById(id);
       await this.invalidateCache();
+      // Invalidate summary cache
+      await CacheService.del('customer:summary');
 
       return {
         success: true,

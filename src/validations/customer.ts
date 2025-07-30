@@ -185,3 +185,108 @@ export const updateCustomerByIdValidation = [
 ];
 
 export const deleteCustomerValidation = customerIdValidation;
+
+// Customer summary response validation schemas
+export const customerSummaryValidation = {
+  totalCustomers: {
+    type: 'number',
+    minimum: 0,
+    description: 'Total number of customers'
+  },
+  uniqueLocations: {
+    type: 'number',
+    minimum: 0,
+    description: 'Number of unique location names'
+  },
+  avgAge: {
+    type: 'number',
+    minimum: 0,
+    maximum: 120,
+    description: 'Average age of customers'
+  },
+  genderDistribution: {
+    type: 'object',
+    properties: {
+      male: { type: 'number', minimum: 0 },
+      female: { type: 'number', minimum: 0 }
+    },
+    required: ['male', 'female'],
+    description: 'Distribution of customers by gender'
+  },
+  deviceDistribution: {
+    type: 'object',
+    properties: {
+      samsung: { type: 'number', minimum: 0 },
+      apple: { type: 'number', minimum: 0 },
+      huawei: { type: 'number', minimum: 0 },
+      xiaomi: { type: 'number', minimum: 0 },
+      oppo: { type: 'number', minimum: 0 },
+      vivo: { type: 'number', minimum: 0 },
+      other: { type: 'number', minimum: 0 }
+    },
+    required: ['samsung', 'apple'],
+    description: 'Distribution of customers by device brand'
+  },
+  locationDistribution: {
+    type: 'object',
+    properties: {
+      urban: { type: 'number', minimum: 0 },
+      suburban: { type: 'number', minimum: 0 },
+      rural: { type: 'number', minimum: 0 }
+    },
+    required: ['urban', 'suburban'],
+    description: 'Distribution of customers by location type'
+  },
+  interestDistribution: {
+    type: 'object',
+    properties: {
+      socialMedia: { type: 'number', minimum: 0 },
+      gaming: { type: 'number', minimum: 0 },
+      shopping: { type: 'number', minimum: 0 },
+      news: { type: 'number', minimum: 0 },
+      entertainment: { type: 'number', minimum: 0 },
+      education: { type: 'number', minimum: 0 },
+      health: { type: 'number', minimum: 0 },
+      finance: { type: 'number', minimum: 0 },
+      travel: { type: 'number', minimum: 0 },
+      food: { type: 'number', minimum: 0 },
+      other: { type: 'number', minimum: 0 }
+    },
+    required: ['socialMedia', 'gaming'],
+    description: 'Distribution of customers by digital interest'
+  },
+  dateRange: {
+    type: 'object',
+    properties: {
+      earliest: { 
+        type: ['string', 'null'], 
+        format: 'date-time',
+        description: 'Earliest customer date'
+      },
+      latest: { 
+        type: ['string', 'null'], 
+        format: 'date-time',
+        description: 'Latest customer date'
+      }
+    },
+    required: ['earliest', 'latest'],
+    description: 'Date range of customer data'
+  }
+};
+
+// JSON Schema for complete customer summary
+export const customerSummarySchema = {
+  type: 'object',
+  properties: customerSummaryValidation,
+  required: [
+    'totalCustomers',
+    'uniqueLocations', 
+    'avgAge',
+    'genderDistribution',
+    'deviceDistribution',
+    'locationDistribution',
+    'interestDistribution',
+    'dateRange'
+  ],
+  additionalProperties: false
+};
