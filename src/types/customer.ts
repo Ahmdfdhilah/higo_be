@@ -102,36 +102,37 @@ export interface CustomerSummaryDto {
   genderDistribution: {
     male: number;
     female: number;
+    other?: number;
   };
   
   deviceDistribution: {
     samsung: number;
     apple: number;
-    huawei?: number;
-    xiaomi?: number;
-    oppo?: number;
-    vivo?: number;
-    other?: number;
+    huawei: number;
+    xiaomi: number;
+    oppo: number;
+    vivo: number;
+    other: number;
   };
   
   locationDistribution: {
     urban: number;
     suburban: number;
-    rural?: number;
+    rural: number;
   };
   
   interestDistribution: {
     socialMedia: number;
     gaming: number;
-    shopping?: number;
-    news?: number;
-    entertainment?: number;
-    education?: number;
-    health?: number;
-    finance?: number;
-    travel?: number;
-    food?: number;
-    other?: number;
+    shopping: number;
+    news: number;
+    entertainment: number;
+    education: number;
+    health: number;
+    finance: number;
+    travel: number;
+    food: number;
+    other: number;
   };
   
   dateRange: {
@@ -145,10 +146,10 @@ export interface EmptyCustomerSummaryDto {
   totalCustomers: 0;
   uniqueLocations: 0;
   avgAge: 0;
-  genderDistribution: { male: 0; female: 0 };
-  deviceDistribution: { samsung: 0; apple: 0 };
-  locationDistribution: { urban: 0; suburban: 0 };
-  interestDistribution: { socialMedia: 0; gaming: 0 };
+  genderDistribution: { male: 0; female: 0; other: 0 };
+  deviceDistribution: { samsung: 0; apple: 0; huawei: 0; xiaomi: 0; oppo: 0; vivo: 0; other: 0 };
+  locationDistribution: { urban: 0; suburban: 0; rural: 0 };
+  interestDistribution: { socialMedia: 0; gaming: 0; shopping: 0; news: 0; entertainment: 0; education: 0; health: 0; finance: 0; travel: 0; food: 0; other: 0 };
   dateRange: { earliest: null; latest: null };
 }
 

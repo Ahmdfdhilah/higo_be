@@ -208,7 +208,8 @@ export const customerSummaryValidation = {
     type: 'object',
     properties: {
       male: { type: 'number', minimum: 0 },
-      female: { type: 'number', minimum: 0 }
+      female: { type: 'number', minimum: 0 },
+      other: { type: 'number', minimum: 0 }
     },
     required: ['male', 'female'],
     description: 'Distribution of customers by gender'
@@ -224,7 +225,7 @@ export const customerSummaryValidation = {
       vivo: { type: 'number', minimum: 0 },
       other: { type: 'number', minimum: 0 }
     },
-    required: ['samsung', 'apple'],
+    required: ['samsung', 'apple', 'huawei', 'xiaomi', 'oppo', 'vivo', 'other'],
     description: 'Distribution of customers by device brand'
   },
   locationDistribution: {
@@ -234,7 +235,7 @@ export const customerSummaryValidation = {
       suburban: { type: 'number', minimum: 0 },
       rural: { type: 'number', minimum: 0 }
     },
-    required: ['urban', 'suburban'],
+    required: ['urban', 'suburban', 'rural'],
     description: 'Distribution of customers by location type'
   },
   interestDistribution: {
@@ -252,7 +253,7 @@ export const customerSummaryValidation = {
       food: { type: 'number', minimum: 0 },
       other: { type: 'number', minimum: 0 }
     },
-    required: ['socialMedia', 'gaming'],
+    required: ['socialMedia', 'gaming', 'shopping', 'news', 'entertainment', 'education', 'health', 'finance', 'travel', 'food', 'other'],
     description: 'Distribution of customers by digital interest'
   },
   dateRange: {

@@ -83,23 +83,39 @@ export class CustomerRepository extends BaseRepository<ICustomer> {
           _id: null,
           totalCustomers: { $sum: 1 },
           uniqueLocations: { $addToSet: '$locationName' },
-          avgAge: { $avg: '$actualAge' },
+          avgAge: { $avg: { $subtract: [{ $year: new Date() }, '$birthYear'] } },
           
           // Gender distribution
           maleCount: { $sum: { $cond: [{ $eq: ['$gender', 'Male'] }, 1, 0] } },
           femaleCount: { $sum: { $cond: [{ $eq: ['$gender', 'Female'] }, 1, 0] } },
+          otherGenderCount: { $sum: { $cond: [{ $eq: ['$gender', 'Other'] }, 1, 0] } },
           
-          // Device distribution
+          // Device distribution - all brands
           samsungCount: { $sum: { $cond: [{ $eq: ['$deviceBrand', 'Samsung'] }, 1, 0] } },
           appleCount: { $sum: { $cond: [{ $eq: ['$deviceBrand', 'Apple'] }, 1, 0] } },
+          huaweiCount: { $sum: { $cond: [{ $eq: ['$deviceBrand', 'Huawei'] }, 1, 0] } },
+          xiaomiCount: { $sum: { $cond: [{ $eq: ['$deviceBrand', 'Xiaomi'] }, 1, 0] } },
+          oppoCount: { $sum: { $cond: [{ $eq: ['$deviceBrand', 'Oppo'] }, 1, 0] } },
+          vivoCount: { $sum: { $cond: [{ $eq: ['$deviceBrand', 'Vivo'] }, 1, 0] } },
+          otherDeviceCount: { $sum: { $cond: [{ $eq: ['$deviceBrand', 'Other'] }, 1, 0] } },
           
-          // Location type distribution
+          // Location type distribution - all types
           urbanCount: { $sum: { $cond: [{ $eq: ['$locationType', 'urban'] }, 1, 0] } },
           suburbanCount: { $sum: { $cond: [{ $eq: ['$locationType', 'sub urban'] }, 1, 0] } },
+          ruralCount: { $sum: { $cond: [{ $eq: ['$locationType', 'rural'] }, 1, 0] } },
           
-          // Digital interest distribution
+          // Digital interest distribution - all interests
           socialMediaCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Social Media'] }, 1, 0] } },
           gamingCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Gaming'] }, 1, 0] } },
+          shoppingCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Shopping'] }, 1, 0] } },
+          newsCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'News'] }, 1, 0] } },
+          entertainmentCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Entertainment'] }, 1, 0] } },
+          educationCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Education'] }, 1, 0] } },
+          healthCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Health'] }, 1, 0] } },
+          financeCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Finance'] }, 1, 0] } },
+          travelCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Travel'] }, 1, 0] } },
+          foodCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Food'] }, 1, 0] } },
+          otherInterestCount: { $sum: { $cond: [{ $eq: ['$digitalInterest', 'Other'] }, 1, 0] } },
           
           // Date range
           earliestDate: { $min: '$date' },
@@ -114,22 +130,38 @@ export class CustomerRepository extends BaseRepository<ICustomer> {
           
           genderDistribution: {
             male: '$maleCount',
-            female: '$femaleCount'
+            female: '$femaleCount',
+            other: '$otherGenderCount'
           },
           
           deviceDistribution: {
             samsung: '$samsungCount',
-            apple: '$appleCount'
+            apple: '$appleCount',
+            huawei: '$huaweiCount',
+            xiaomi: '$xiaomiCount',
+            oppo: '$oppoCount',
+            vivo: '$vivoCount',
+            other: '$otherDeviceCount'
           },
           
           locationDistribution: {
             urban: '$urbanCount',
-            suburban: '$suburbanCount'
+            suburban: '$suburbanCount',
+            rural: '$ruralCount'
           },
           
           interestDistribution: {
             socialMedia: '$socialMediaCount',
-            gaming: '$gamingCount'
+            gaming: '$gamingCount',
+            shopping: '$shoppingCount',
+            news: '$newsCount',
+            entertainment: '$entertainmentCount',
+            education: '$educationCount',
+            health: '$healthCount',
+            finance: '$financeCount',
+            travel: '$travelCount',
+            food: '$foodCount',
+            other: '$otherInterestCount'
           },
           
           dateRange: {
